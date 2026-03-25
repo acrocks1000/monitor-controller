@@ -8,18 +8,34 @@ import path from "path";
 import fs from "fs";
 
 // Path to ClickMonitorDDC tool if available
-const CLICK_MONITOR_DDC = path.join(
-  __dirname,
-  "../ClickMonitorDDC/ClickMonitorDDC_7_2.exe"
-);
+// Try multiple paths to handle both development and packaged executable scenarios
+const findClickMonitorDDC = (): string | null => {
+  const possiblePaths = [
+    // Development: dist/../ClickMonitorDDC/...
+    path.join(__dirname, "../ClickMonitorDDC/ClickMonitorDDC_7_2.exe"),
+    // Packaged executable: snapshot/project/ClickMonitorDDC/...
+    path.join(__dirname, "../../ClickMonitorDDC/ClickMonitorDDC_7_2.exe"),
+    // Relative to current working directory
+    path.resolve("ClickMonitorDDC/ClickMonitorDDC_7_2.exe"),
+    // Absolute path if set in environment
+    process.env.CLICK_MONITOR_DDC || "",
+  ];
 
-const hasClickMonitorDDC = (() => {
-  try {
-    return fs.existsSync(CLICK_MONITOR_DDC);
-  } catch {
-    return false;
+  for (const toolPath of possiblePaths) {
+    if (toolPath && fs.existsSync(toolPath)) {
+      console.log(`✓ ClickMonitorDDC found at: ${toolPath}`);
+      return toolPath;
+    }
   }
-})();
+  console.warn(
+    "⚠ ClickMonitorDDC tool not found. Checked paths:",
+    possiblePaths.filter((p) => p)
+  );
+  return null;
+};
+
+const CLICK_MONITOR_DDC = findClickMonitorDDC();
+const hasClickMonitorDDC = CLICK_MONITOR_DDC !== null;
 
 export interface Monitor {
   name: string;
@@ -261,7 +277,7 @@ export class DDCMonitor {
     }
 
     try {
-      execSync(`"${CLICK_MONITOR_DDC}" s DisplayPort`, {
+      execSync(`"${CLICK_MONITOR_DDC}" s DisplayPort1`, {
         windowsHide: true,
       });
       return true;

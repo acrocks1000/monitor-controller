@@ -1,5 +1,6 @@
 import express from "express";
 import DDCMonitor, { INPUT_SOURCES } from "./ddc-monitor-js";
+import os from "os";
 
 const app = express();
 const PORT = 3000;
@@ -375,6 +376,22 @@ app.get("/api/info", (req, res) => {
   });
 });
 
+/**
+ * Debug endpoint - shows system info and tool status
+ */
+app.get("/api/debug", (req, res) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    node_version: process.version,
+    platform: process.platform,
+    cwd: process.cwd(),
+    ddc_info: {
+      tools_available: true,
+      monitors: ddc.getMonitors(),
+    },
+  });
+});
+
 // Legacy endpoint compatibility
 app.get("/hdmi", (req, res) => {
   const success = ddc.switchToHDMI();
@@ -394,7 +411,23 @@ app.get("/brightness/:value", (req, res) => {
   );
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🖥️  DDC Monitor Controller running on http://localhost:${PORT}`);
-  console.log(`📡 API documentation: http://localhost:${PORT}/api/info\n`);
+app.listen(PORT, "0.0.0.0", () => {
+  // Get local IP address
+  const interfaces = os.networkInterfaces();
+  let localIP = "127.0.0.1";
+  
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      // Skip internal and non-IPv4 addresses
+      if (iface.family === "IPv4" && !iface.internal) {
+        localIP = iface.address;
+        break;
+      }
+    }
+  }
+  
+  console.log(`\n🖥️  DDC Monitor Controller running on http://${localIP}:${PORT}`);
+  console.log(`📡 Local access: http://localhost:${PORT}`);
+  console.log(`📡 Network access: http://${localIP}:${PORT}`);
+  console.log(`📡 API documentation: http://${localIP}:${PORT}/api/info\n`);
 });

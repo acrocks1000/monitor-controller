@@ -6,6 +6,7 @@ yarn.lock
 # Build artifacts
 dist/
 build/
+ClickMonitorDDC/
 *.node
 
 # IDE
