@@ -17,7 +17,17 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
+    "pkg": "^5.8.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.2"
+  },
+  "bin": {
+    "monitor-controller": "dist/index.js"
+  },
+  "pkg": {
+    "targets": [
+      "node22-win-x64"
+    ],
+    "outputPath": "dist/bin"
   }
 }
